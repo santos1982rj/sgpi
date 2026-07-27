@@ -112,7 +112,7 @@ export default function TurmasPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => { setForm({ codigo: t.codigo, periodo: t.periodo, semestre: t.semestre }); setModal({ open: true, edit: t }) }}
+                        <button onClick={() => { setForm({ codigo: t.codigo, periodo: t.periodo, semestre: t.semestre, curso_id: '' }); setModal({ open: true, edit: t }) }}
                           className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
                           <Edit2 className="h-4 w-4" />
                         </button>
