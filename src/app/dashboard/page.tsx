@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { LayoutDashboard, Users, UserCheck, GraduationCap, Clock, CheckCircle2, AlertCircle } from 'lucide-react'
+import { LayoutDashboard, Users, UserCheck, GraduationCap, Clock, CheckCircle2, AlertCircle, ClipboardCheck, FileText } from 'lucide-react'
 import Link from 'next/link'
 
 const statusColors = {
