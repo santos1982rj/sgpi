@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a1628;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+  }
+  .card {
+    text-align: center;
+  }
+  h1 {
+    color: #4fc3f7;
+    font-size: 24px;
+    margin-top: 20px;
+    font-family: 'Comic Sans MS', cursive;
+  }
+  p {
+    color: #8899aa;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <svg viewBox="0 0 400 350" width="400" height="350">
+    <!-- Fire from hippo mouth -->
+    <defs>
+      <radialGradient id="fireGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#fff7a0"/>
+        <stop offset="30%" stop-color="#ffcc00"/>
+        <stop offset="60%" stop-color="#ff6600"/>
+        <stop offset="100%" stop-color="#ff2200"/>
+      </radialGradient>
+      <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#5a7a9a"/>
+        <stop offset="100%" stop-color="#3a5a7a"/>
+      </linearGradient>
+    </defs>
+
+    <!-- FIRE -->
+    <ellipse cx="200" cy="80" rx="45" ry="35" fill="url(#fireGrad)" opacity="0.9">
+      <animate attributeName="rx" values="45;55;40;50;45" dur="0.5s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="35;40;30;38;35" dur="0.5s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="185" cy="70" rx="20" ry="18" fill="#ffcc00" opacity="0.8">
+      <animate attributeName="cx" values="185;190;180;185" dur="0.3s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="215" cy="75" rx="15" ry="12" fill="#ff6600" opacity="0.7">
+      <animate attributeName="cx" values="215;220;210;215" dur="0.4s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="195" cy="60" rx="10" ry="8" fill="#fff7a0" opacity="0.9">
+      <animate attributeName="cy" values="60;55;62;60" dur="0.2s" repeatCount="indefinite"/>
+    </ellipse>
+
+    <!-- HIPPO HEAD -->
+    <!-- Head base -->
+    <ellipse cx="200" cy="140" rx="70" ry="55" fill="#7a5a4a"/>
+    <!-- Head top -->
+    <ellipse cx="200" cy="120" rx="55" ry="35" fill="#8a6a5a"/>
+    
+    <!-- Ears -->
+    <ellipse cx="150" cy="95" rx="12" ry="15" fill="#7a5a4a" transform="rotate(-15 150 95)"/>
+    <ellipse cx="150" cy="95" rx="6" ry="10" fill="#ba8a7a" transform="rotate(-15 150 95)"/>
+    <ellipse cx="250" cy="95" rx="12" ry="15" fill="#7a5a4a" transform="rotate(15 250 95)"/>
+    <ellipse cx="250" cy="95" rx="6" ry="10" fill="#ba8a7a" transform="rotate(15 250 95)"/>
+
+    <!-- Eyes -->
+    <circle cx="175" cy="125" r="12" fill="white"/>
+    <circle cx="225" cy="125" r="12" fill="white"/>
+    <circle cx="178" cy="125" r="7" fill="#222"/>
+    <circle cx="228" cy="125" r="7" fill="#222"/>
+    <circle cx="180" cy="123" r="2.5" fill="white"/>
+    <circle cx="230" cy="123" r="2.5" fill="white"/>
+
+    <!-- Nostrils -->
+    <ellipse cx="185" cy="148" rx="6" ry="4" fill="#5a3a2a"/>
+    <ellipse cx="215" cy="148" rx="6" ry="4" fill="#5a3a2a"/>
+
+    <!-- Mouth open (fire coming out) -->
+    <ellipse cx="200" cy="165" rx="25" ry="12" fill="#4a2a1a"/>
+    <ellipse cx="200" cy="163" rx="20" ry="8" fill="#8a3a2a"/>
+
+    <!-- SHARK BODY attached below -->
+    <path d="M 145 175 
+             Q 120 180 100 200 
+             Q 80 240 90 280 
+             Q 100 310 130 320 
+             Q 160 330 200 330 
+             Q 240 330 270 320 
+             Q 300 310 310 280 
+             Q 320 240 300 200 
+             Q 280 180 255 175 
+             Z" fill="url(#bodyGrad)"/>
+
+    <!-- Belly -->
+    <path d="M 160 200 
+             Q 140 240 150 280 
+             Q 160 310 200 315 
+             Q 240 310 250 280 
+             Q 260 240 240 200 
+             Z" fill="#b0c8d8" opacity="0.5"/>
+
+    <!-- Dorsal fin -->
+    <path d="M 190 180 L 200 140 L 220 180" fill="#4a6a8a"/>
+
+    <!-- Tail fin -->
+    <path d="M 90 250 L 50 220 L 70 260 L 40 290 L 90 270" fill="#4a6a8a"/>
+
+    <!-- Pectoral fin -->
+    <path d="M 160 260 L 130 290 L 170 275" fill="#4a6a8a"/>
+    <path d="M 240 260 L 270 290 L 230 275" fill="#4a6a8a"/>
+
+    <!-- Teeth on the hippo mouth -->
+    <rect x="190" y="170" width="5" height="7" rx="1" fill="white"/>
+    <rect x="197" y="172" width="5" height="6" rx="1" fill="white"/>
+    <rect x="204" y="170" width="5" height="7" rx="1" fill="white"/>
+
+    <!-- Shark gills -->
+    <path d="M 165 220 Q 170 225 165 230" stroke="#3a5a7a" stroke-width="2" fill="none"/>
+    <path d="M 162 235 Q 167 240 162 245" stroke="#3a5a7a" stroke-width="2" fill="none"/>
+    <path d="M 165 250 Q 170 255 165 260" stroke="#3a5a7a" stroke-width="2" fill="none"/>
+
+    <!-- Small fish nearby -->
+    <path d="M 330 290 Q 345 285 360 290 Q 345 295 330 290" fill="#4fc3f7"/>
+    <circle cx="360" cy="288" r="2" fill="#4fc3f7"/>
+    <circle cx="361" cy="288" r="1" fill="white"/>
+
+    <!-- Bubbles -->
+    <circle cx="140" cy="200" r="4" fill="none" stroke="white" stroke-width="1" opacity="0.5">
+      <animate attributeName="cy" values="200;180;160" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0.3;0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="150" cy="210" r="3" fill="none" stroke="white" stroke-width="1" opacity="0.4">
+      <animate attributeName="cy" values="210;190;170" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.2;0" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+  <h1>🦈 TubaPotamo Fogo 🦛🔥</h1>
+  <p>Feito especialmente pro Davi pelo Léo 😄</p>
+</div>
+</body>
+</html>
