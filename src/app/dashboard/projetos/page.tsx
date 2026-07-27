@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Upload, FileText, CheckCircle, Clock, AlertCircle, Download } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 const projetos = [
   { grupo: 'G01', tema: 'Fundações em solo residual', membros: 'Vinicius, Ana, João', proposta: true, relatorio: true, status: 'entregue' },
@@ -13,6 +14,31 @@ const projetos = [
 
 export default function ProjetosPage() {
   const [uploading, setUploading] = useState<string | null>(null)
+  const supabase = createClient()
+
+  const handleUpload = async (grupo: string, tipo: 'proposta' | 'relatorio') => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.pdf'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file || file.size > 20 * 1024 * 1024) {
+        alert('Arquivo deve ser PDF e no máximo 20 MB')
+        return
+      }
+      setUploading(grupo)
+      const path = `${grupo}/${tipo}_${Date.now()}.pdf`
+      const { error } = await supabase.storage.from('documentos').upload(path, file)
+      if (error) {
+        alert('Erro ao enviar: ' + error.message)
+      } else {
+        alert(`${tipo === 'proposta' ? 'Proposta' : 'Relatório'} enviado com sucesso!`)
+        window.location.reload()
+      }
+      setUploading(null)
+    }
+    input.click()
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
