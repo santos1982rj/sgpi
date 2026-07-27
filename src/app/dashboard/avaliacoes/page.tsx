@@ -68,7 +68,7 @@ export default function AvaliacoesPage() {
           etapa: 'P1',
           nota: parseFloat(n.p1),
           feedback: n.feedback || null,
-        }, { onConflict: 'grupo_id,aluno_id,etapa' }))
+        }, { onConflict: 'grupo_id,aluno_id,etapa' }).select('*').then())
       }
       if (n.p2) {
         promises.push(supabase.from('avaliacoes').upsert({
@@ -77,7 +77,7 @@ export default function AvaliacoesPage() {
           etapa: 'P2',
           nota: parseFloat(n.p2),
           feedback: n.feedback || null,
-        }, { onConflict: 'grupo_id,aluno_id,etapa' }))
+        }, { onConflict: 'grupo_id,aluno_id,etapa' }).select('*').then())
       }
     }
     
