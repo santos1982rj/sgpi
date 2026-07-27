@@ -1,279 +1,163 @@
-'use client'
+import { createClient } from '@/lib/supabase/server'
+import { LayoutDashboard, Users, UserCheck, GraduationCap, Clock, CheckCircle2, AlertCircle } from 'lucide-react'
+import Link from 'next/link'
 
-import {
-  LayoutDashboard,
-  Users,
-  UserCheck,
-  GraduationCap,
-  CheckCircle2,
-  Clock,
-  CircleDot,
-  ArrowRight,
-} from 'lucide-react'
-
-// ── Mock data ──────────────────────────────────────────────
-
-const stats = [
-  { label: 'Turmas', value: 6, icon: LayoutDashboard, color: 'from-[#4fc3f7] to-[#2563eb]' },
-  { label: 'Grupos', value: 24, icon: Users, color: 'from-[#a78bfa] to-[#7c3aed]' },
-  { label: 'Avaliadores', value: 12, icon: UserCheck, color: 'from-[#34d399] to-[#059669]' },
-  { label: 'Notas Lançadas', value: '16/24', icon: GraduationCap, color: 'from-[#fbbf24] to-[#d97706]' },
-]
-
-const turmas = [
-  { id: 'ECS-101', disciplina: 'Eng. Civil — Estruturas', vagas: 40, grupos: 6, etapa: 'Documentação', status: 'Em andamento' as const },
-  { id: 'ECS-102', disciplina: 'Eng. Civil — Geotecnia', vagas: 35, grupos: 5, etapa: 'Formação', status: 'Pendente' as const },
-  { id: 'ECS-103', disciplina: 'Eng. Civil — Hidráulica', vagas: 30, grupos: 4, etapa: 'Entrega Final', status: 'Atrasado' as const },
-  { id: 'ECS-104', disciplina: 'Eng. Civil — Transportes', vagas: 45, grupos: 6, etapa: 'Avaliação', status: 'Em andamento' as const },
-  { id: 'ECS-105', disciplina: 'Eng. Civil — Materiais', vagas: 35, grupos: 3, etapa: 'Formação', status: 'Pendente' as const },
-  { id: 'ECS-106', disciplina: 'Eng. Civil — Construção Civil', vagas: 40, grupos: 4, etapa: 'Documentação', status: 'Em andamento' as const },
-]
-
-const etapas = [
-  { nome: 'Cadastro de Turmas', descricao: 'Turmas e horários definidos', concluida: true, ativa: false },
-  { nome: 'Formação de Grupos', descricao: 'Alunos alocados nos grupos', concluida: false, ativa: true },
-  { nome: 'Documentação', descricao: 'Envio dos documentos do projeto', concluida: false, ativa: false },
-  { nome: 'Avaliação', descricao: 'Correção pelos avaliadores', concluida: false, ativa: false },
-  { nome: 'Resultado Final', descricao: 'Notas e feedback publicados', concluida: false, ativa: false },
-]
-
-// ── Helpers ────────────────────────────────────────────────
-
-const statusBadge = (status: 'Em andamento' | 'Pendente' | 'Atrasado') => {
-  const map = {
-    'Em andamento': 'bg-[rgba(79,195,247,0.15)] text-[#4fc3f7] border-[rgba(79,195,247,0.3)]',
-    Pendente: 'bg-[rgba(251,191,36,0.15)] text-[#fbbf24] border-[rgba(251,191,36,0.3)]',
-    Atrasado: 'bg-[rgba(239,68,68,0.15)] text-[#ef4444] border-[rgba(239,68,68,0.3)]',
-  }
-  return map[status]
+const statusColors = {
+  'Ativo': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Avaliando': 'bg-amber-50 text-amber-700 border-amber-200',
+  'Encerrado': 'bg-slate-50 text-slate-500 border-slate-200',
 }
 
-// ── Components ─────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  color,
-}: {
-  label: string
-  value: string | number
-  icon: React.ElementType
-  color: string
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] p-6 transition hover:bg-[rgba(255,255,255,0.06)] hover:shadow-lg hover:shadow-[rgba(79,195,247,0.06)]">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-            {label}
-          </p>
-          <p className="mt-2 text-4xl font-extrabold tracking-tight text-white">
-            {value}
-          </p>
-        </div>
-        <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${color} shadow-lg`}
-        >
-          <Icon className="h-5 w-5 text-white" />
-        </div>
-      </div>
-    </div>
-  )
+const cursoColors: Record<string, string> = {
+  'EC': 'bg-blue-50 text-blue-700',
+  'EP': 'bg-emerald-50 text-emerald-700',
+  'CC': 'bg-purple-50 text-purple-700',
 }
 
-function TurmasTable() {
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { count: turmasCount } = await supabase.from('turmas').select('*', { count: 'exact', head: true }).eq('ativa', true)
+  const { count: gruposCount } = await supabase.from('grupos').select('*', { count: 'exact', head: true })
+  const { count: avaliacoesCount } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true })
+
+  const { data: turmas } = await supabase.from('turmas').select('*').eq('ativa', true).limit(6).order('created_at', { ascending: false })
+
+  const stats = [
+    { label: 'Turmas Ativas', value: turmasCount || 0, icon: LayoutDashboard, color: 'from-[#4fc3f7] to-[#2563eb]', desc: 'este semestre' },
+    { label: 'Grupos', value: gruposCount || 0, icon: Users, color: 'from-[#a78bfa] to-[#7c3aed]', desc: 'alunos matriculados' },
+    { label: 'Avaliadores', value: 12, icon: UserCheck, color: 'from-[#34d399] to-[#059669]', desc: 'professores ativos' },
+    { label: 'Avaliações', value: avaliacoesCount || 0, icon: GraduationCap, color: 'from-[#fbbf24] to-[#d97706]', desc: 'notas lançadas' },
+  ]
+
+  const timeline = [
+    { date: '05 a 18/08', title: 'Formação de Grupos', desc: 'Período de inscrição', done: true },
+    { date: '19/08 a 15/09', title: 'Envio da Proposta', desc: 'Upload do PDF', done: true },
+    { date: '16/09 a 10/11', title: 'Desenvolvimento', desc: 'Período atual', current: true },
+    { date: '11 a 24/11', title: 'Relatório Final', desc: 'Prazo final', done: false },
+    { date: '25/11 a 02/12', title: 'Apresentações', desc: 'Banca avaliadora', done: false },
+  ]
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)]">
-      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.06)] px-6 py-4">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">
-          Turmas Ativas
-        </h3>
-        <span className="rounded-full bg-[rgba(79,195,247,0.15)] px-3 py-1 text-xs font-semibold text-[#4fc3f7]">
-          {turmas.length} turmas
-        </span>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Welcome */}
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 text-sm mt-1">
+          {user?.email ? `Bem-vindo, ${user.email}` : 'Visão geral do semestre 2026.2'}
+        </p>
       </div>
 
-      {/* Responsive wrapper */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[rgba(255,255,255,0.06)] text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-              <th className="px-6 py-4">Código</th>
-              <th className="px-6 py-4">Disciplina</th>
-              <th className="px-6 py-4 text-center">Vagas</th>
-              <th className="px-6 py-4 text-center">Grupos</th>
-              <th className="px-6 py-4">Etapa</th>
-              <th className="px-6 py-4">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {turmas.map((t) => (
-              <tr
-                key={t.id}
-                className="border-b border-[rgba(255,255,255,0.04)] transition hover:bg-[rgba(255,255,255,0.02)] last:border-0"
-              >
-                <td className="px-6 py-4 font-mono text-xs font-medium text-[#4fc3f7]">
-                  {t.id}
-                </td>
-                <td className="px-6 py-4 text-white">{t.disciplina}</td>
-                <td className="px-6 py-4 text-center text-gray-400">{t.vagas}</td>
-                <td className="px-6 py-4 text-center text-gray-400">{t.grupos}</td>
-                <td className="px-6 py-4 text-gray-300">{t.etapa}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-block rounded-full border px-3 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${statusBadge(t.status)}`}
-                  >
-                    {t.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function Timeline() {
-  return (
-    <div className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] px-6 py-6">
-      <h3 className="mb-6 text-sm font-bold uppercase tracking-widest text-gray-400">
-        Cronograma — Etapas
-      </h3>
-      <div className="relative">
-        {/* Vertical line */}
-        <div className="absolute left-[9px] top-3 h-full w-px bg-[rgba(255,255,255,0.08)]" />
-
-        <div className="space-y-6">
-          {etapas.map((etapa, i) => (
-            <div key={etapa.nome} className="relative flex items-start gap-4">
-              {/* Dot */}
-              <div className="relative z-10 mt-0.5">
-                {etapa.concluida ? (
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-[#34d399] to-[#059669] shadow-lg shadow-[rgba(52,211,153,0.2)]">
-                    <CheckCircle2 className="h-3 w-3 text-white" />
-                  </div>
-                ) : etapa.ativa ? (
-                  <div className="relative flex h-5 w-5 items-center justify-center">
-                    <div className="absolute h-5 w-5 animate-ping rounded-full bg-[#4fc3f7] opacity-40" />
-                    <div className="relative flex h-5 w-5 items-center justify-center rounded-full bg-[#4fc3f7]">
-                      <Clock className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.04)]">
-                    <CircleDot className="h-3 w-3 text-gray-500" />
-                  </div>
-                )}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s, i) => (
+          <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{s.label}</span>
+              <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center shadow-sm`}>
+                <s.icon className="h-5 w-5 text-white" />
               </div>
-
-              {/* Content */}
-              <div className="flex-1 pb-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-sm font-semibold ${
-                      etapa.concluida
-                        ? 'text-[#34d399]'
-                        : etapa.ativa
-                          ? 'text-[#4fc3f7]'
-                          : 'text-gray-400'
-                    }`}
-                  >
-                    {etapa.nome}
-                  </span>
-                  {etapa.concluida && (
-                    <span className="rounded-full bg-[rgba(52,211,153,0.12)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#34d399]">
-                      Concluída
-                    </span>
-                  )}
-                  {etapa.ativa && (
-                    <span className="rounded-full bg-[rgba(79,195,247,0.15)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#4fc3f7]">
-                      Em andamento
-                    </span>
-                  )}
-                </div>
-                <p
-                  className={`mt-0.5 text-xs ${
-                    etapa.concluida ? 'text-gray-500' : 'text-gray-500'
-                  }`}
-                >
-                  {etapa.descricao}
-                </p>
-              </div>
-
-              {/* Connector arrow (between items) */}
-              {i < etapas.length - 1 && (
-                <div className="hidden sm:flex items-center self-stretch pr-2">
-                  <ArrowRight className="h-3 w-3 text-[rgba(255,255,255,0.1)]" />
-                </div>
-              )}
             </div>
+            <div className="text-3xl font-bold text-gray-900">{s.value}</div>
+            <div className="text-xs text-gray-400 mt-1">{s.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Turmas + Timeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Turmas */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h2 className="font-bold text-gray-900">Turmas do Semestre</h2>
+            <Link href="/dashboard/turmas" className="text-sm font-medium text-[#2563eb] hover:text-[#1a4b8c] transition-colors">Ver todas</Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-50">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Turma</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Curso</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Período</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Grupos</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Professor</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(turmas?.length ? turmas : [
+                  { codigo: 'PI-EC8A', curso_id: 'EC', periodo: '8º', grupos: 4, professor: 'Prof. Carlos Menezes', status: 'Ativo' },
+                  { codigo: 'PI-EC8B', curso_id: 'EC', periodo: '8º', grupos: 5, professor: 'Profa. Ana Lúcia', status: 'Ativo' },
+                  { codigo: 'PI-EP7A', curso_id: 'EP', periodo: '7º', grupos: 6, professor: 'Prof. Ricardo Soares', status: 'Avaliando' },
+                  { codigo: 'PI-EC6A', curso_id: 'EC', periodo: '6º', grupos: 3, professor: 'Prof. Felipe Alves', status: 'Ativo' },
+                  { codigo: 'PI-CC7A', curso_id: 'CC', periodo: '7º', grupos: 4, professor: 'Profa. Juliana Torres', status: 'Avaliando' },
+                  { codigo: 'PI-EP6A', curso_id: 'EP', periodo: '6º', grupos: 2, professor: 'Prof. Marcos Duarte', status: 'Encerrado' },
+                ] as any[]).map((t, i) => (
+                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4"><span className="font-semibold text-gray-900">{t.codigo}</span></td>
+                    <td className="px-6 py-4"><span className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-medium ${cursoColors[t.curso_id as string] || 'bg-gray-50 text-gray-600'}`}>{t.curso_id}</span></td>
+                    <td className="px-6 py-4 text-gray-600">{t.periodo}</td>
+                    <td className="px-6 py-4 text-gray-600">{t.grupos}</td>
+                    <td className="px-6 py-4 text-gray-600 hidden md:table-cell">{t.professor || '-'}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[t.status as keyof typeof statusColors] || statusColors['Ativo']}`}>{t.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h2 className="font-bold text-gray-900">Ciclo do Projeto</h2>
+          </div>
+          <div className="p-6">
+            <div className="relative pl-8 space-y-0">
+              {timeline.map((item, i) => (
+                <div key={i} className="relative pb-6 last:pb-0">
+                  <div className={`absolute left-0 top-1.5 h-3 w-3 rounded-full border-2 ${
+                    item.done ? 'bg-emerald-500 border-emerald-500' :
+                    item.current ? 'bg-[#2563eb] border-[#2563eb] ring-4 ring-blue-100' :
+                    'bg-white border-gray-300'
+                  }`} />
+                  {i < timeline.length - 1 && (
+                    <div className={`absolute left-[5px] top-[18px] w-0.5 h-[calc(100%-12px)] ${item.done ? 'bg-emerald-200' : 'bg-gray-200'}`} />
+                  )}
+                  <div>
+                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{item.date}</div>
+                    <div className={`text-sm font-semibold mt-0.5 ${item.current ? 'text-[#2563eb]' : 'text-gray-900'}`}>{item.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h2 className="font-bold text-gray-900 mb-4">Ações Rápidas</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Nova Turma', href: '/dashboard/turmas?novo=1', icon: LayoutDashboard, color: 'from-[#4fc3f7] to-[#2563eb]' },
+            { label: 'Novo Grupo', href: '/dashboard/grupos?novo=1', icon: Users, color: 'from-[#34d399] to-[#059669]' },
+            { label: 'Lançar Notas', href: '/dashboard/avaliacoes', icon: ClipboardCheck, color: 'from-[#fbbf24] to-[#d97706]' },
+            { label: 'Exportar Dados', href: '/dashboard/notas', icon: FileText, color: 'from-[#a78bfa] to-[#7c3aed]' },
+          ].map((a, i) => (
+            <Link key={i} href={a.href} className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all group">
+              <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${a.color} flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform`}>
+                <a.icon className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">{a.label}</span>
+            </Link>
           ))}
         </div>
       </div>
-    </div>
-  )
-}
-
-// ── Page ───────────────────────────────────────────────────
-
-export default function DashboardPage() {
-  return (
-    <div className="min-h-screen bg-[#0a1628]">
-      {/* Fixed header */}
-      <header className="sticky top-0 z-30 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(10,22,40,0.85)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#4fc3f7] to-[#2563eb] font-extrabold text-sm text-white shadow-lg">
-              SG
-            </div>
-            <div>
-              <h1 className="text-lg font-extrabold tracking-tight text-white">
-                SGPI — UNIG
-              </h1>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">
-                Gestão de Projetos Integradores
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <span className="rounded-full bg-[rgba(79,195,247,0.12)] px-3 py-1 text-xs font-medium text-[#4fc3f7]">
-              2026.2
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#4fc3f7] to-[#2563eb] text-xs font-bold text-white">
-              C
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main content */}
-      <main className="mx-auto max-w-7xl space-y-8 px-6 py-8">
-        {/* Stats grid */}
-        <section>
-          <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-500">
-            Visão Geral
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map((s) => (
-              <StatCard key={s.label} {...s} />
-            ))}
-          </div>
-        </section>
-
-        {/* Two-column layout: table + timeline */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-          <section>
-            <TurmasTable />
-          </section>
-          <aside>
-            <Timeline />
-          </aside>
-        </div>
-      </main>
     </div>
   )
 }
