@@ -67,7 +67,7 @@ export default function TurmasPage() {
           <h1 className="text-2xl font-bold text-gray-900">Turmas</h1>
           <p className="text-sm text-gray-500 mt-1">{turmas.length} turmas cadastradas</p>
         </div>
-        <button onClick={() => { setForm({ codigo: '', periodo: '', semestre: '2026.2' }); setModal({ open: true }) }}
+        <button onClick={() => { setForm({ codigo: '', periodo: '', semestre: '2026.2', curso_id: '' }); setModal({ open: true }) }}
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2563eb] text-white rounded-xl text-sm font-semibold hover:bg-[#1a4b8c] transition-colors shadow-sm">
           <Plus className="h-4 w-4" /> Nova Turma
         </button>
