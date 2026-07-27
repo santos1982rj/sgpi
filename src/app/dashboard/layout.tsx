@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, Users2, BookOpen, FileText,
-  ClipboardCheck, Settings, LogOut, Menu, X, Bell
+  ClipboardCheck, Settings, LogOut, Menu, X, Bell, Award
 } from 'lucide-react'
 
 const roleNav: Record<string, { name: string; href: string; icon: any }[]> = {
