@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { ArrowLeft } from "next/navigation"
-import Link from "next/link"
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 
 export default function Page() {
   return (
@@ -10,7 +10,7 @@ export default function Page() {
         <ArrowLeft className="h-4 w-4" /> Voltar ao Dashboard
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Notas</h1>
-      <p className="text-gray-500">Página em construcao. Volte em breve.</p>
+      <p className="text-gray-500">Página em construção. Volte em breve.</p>
     </div>
   )
 }
