@@ -19,12 +19,17 @@ export default function TurmasPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState<{ open: boolean; edit?: Turma }>({ open: false })
-  const [form, setForm] = useState({ codigo: '', periodo: '', semestre: '2026.2' })
+  const [form, setForm] = useState({ codigo: '', periodo: '', semestre: '2026.2', curso_id: '' })
+  const [cursos, setCursos] = useState<{ id: string; nome: string; sigla: string }[]>([])
 
   const load = async () => {
     setLoading(true)
-    const { data } = await supabase.from('turmas').select('*').order('created_at', { ascending: false })
-    if (data) setTurmas(data)
+    const [tData, cData] = await Promise.all([
+      supabase.from('turmas').select('*').order('created_at', { ascending: false }),
+      supabase.from('cursos').select('*')
+    ])
+    if (tData.data) setTurmas(tData.data)
+    if (cData.data) setCursos(cData.data)
     setLoading(false)
   }
 
@@ -32,9 +37,9 @@ export default function TurmasPage() {
 
   const save = async () => {
     if (modal.edit) {
-      await supabase.from('turmas').update(form).eq('id', modal.edit.id)
+      await supabase.from('turmas').update({ codigo: form.codigo, periodo: form.periodo, semestre: form.semestre, curso_id: form.curso_id }).eq('id', modal.edit.id)
     } else {
-      await supabase.from('turmas').insert({ ...form, ativa: true })
+      await supabase.from('turmas').insert({ codigo: form.codigo, periodo: form.periodo, semestre: form.semestre, curso_id: form.curso_id, ativa: true })
     }
     setModal({ open: false })
     load()
@@ -140,6 +145,14 @@ export default function TurmasPage() {
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:border-[#2563eb] focus:ring-4 focus:ring-blue-50 outline-none" />
               </div>
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Curso</label>
+                  <select value={form.curso_id} onChange={e => setForm({ ...form, curso_id: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:border-[#2563eb] focus:ring-4 focus:ring-blue-50 outline-none bg-white">
+                    <option value="">Selecione...</option>
+                    {cursos.map(c => <option key={c.id} value={c.id}>{c.nome} ({c.sigla})</option>)}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Período</label>
                   <input value={form.periodo} onChange={e => setForm({ ...form, periodo: e.target.value })} placeholder="Ex: 8º"
