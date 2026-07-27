@@ -1,54 +1,37 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { loginAction } from '@/app/actions/login'
 
 export default function LoginPage() {
-  const router = useRouter()
-  const supabase = createClient()
   const [login, setLogin] = useState('')
   const [senha, setSenha] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    let email = login
+    const fd = new FormData()
+    fd.set('login', login)
+    fd.set('password', senha)
 
-    // If login looks like a matrícula (only numbers), convert to institutional email
-    if (/^\d{9,}$/.test(login.trim())) {
-      email = `${login.trim()}@aluno.unig.edu.br`
-    }
-
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    })
-
-    if (authError) {
-      setError('Matrícula/email ou senha inválidos')
+    const res = await loginAction(fd)
+    if (res?.error) {
+      setError(res.error)
       setLoading(false)
-      return
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
   return (
     <div className="min-h-screen bg-[#0a1628] flex">
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0a1628] via-[#0f2040] to-[#1a3a5c] items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 25% 50%, #4fc3f7 0%, transparent 50%), radial-gradient(circle at 75% 50%, #2563eb 0%, transparent 50%)' }} />
+        <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage:'radial-gradient(circle at 25% 50%, #4fc3f7 0%, transparent 50%), radial-gradient(circle at 75% 50%, #2563eb 0%, transparent 50%)'}} />
         <div className="relative z-10 text-center max-w-md px-8">
           <div className="text-6xl mb-6 font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#4fc3f7] to-white tracking-tight">SGPI</div>
-          <p className="text-gray-400 text-lg leading-relaxed">
-            Gestão de Projetos Integradores<br />
-            <span className="text-sm text-gray-600">Universidade Iguaçu — 2026.2</span>
-          </p>
+          <p className="text-gray-400 text-lg leading-relaxed">Gestão de Projetos Integradores<br /><span className="text-sm text-gray-600">Universidade Iguaçu — 2026.2</span></p>
           <div className="mt-12 space-y-3 text-left">
             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
               <p className="text-[11px] uppercase tracking-widest text-gray-500 font-semibold mb-2">Admin / Coordenação</p>
@@ -73,24 +56,20 @@ export default function LoginPage() {
             </div>
             <h1 className="text-xl font-bold text-center text-gray-900 mb-1">Acessar o SGPI</h1>
             <p className="text-sm text-center text-gray-500 mb-8">Sistema de Gestão de Projetos Integradores</p>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Matrícula ou E-mail</label>
-                <input value={login} onChange={e => setLogin(e.target.value)} required autoFocus
-                  placeholder="Ex: 230026043 ou coordenacao@unig.br"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-blue-50 transition-all" />
+                <input value={login} onChange={e => setLogin(e.target.value)} required autoFocus placeholder="Ex: 230026043 ou coordenacao@unig.br"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-blue-50" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Senha</label>
-                <input type="password" value={senha} onChange={e => setSenha(e.target.value)} required
-                  placeholder="Sua senha"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-blue-50 transition-all" />
+                <input type="password" value={senha} onChange={e => setSenha(e.target.value)} required placeholder="Sua senha"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-blue-50" />
               </div>
-              {error && (
-                <div className="text-red-600 text-sm font-medium bg-red-50 rounded-xl px-4 py-3">{error}</div>
-              )}
+              {error && <div className="text-red-600 text-sm font-medium bg-red-50 rounded-xl px-4 py-3">{error}</div>}
               <button type="submit" disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white rounded-xl font-semibold text-sm hover:from-[#1d4ed8] hover:to-[#1e40af] disabled:opacity-50 transition-all shadow-lg shadow-blue-500/20">
+                className="w-full py-3 bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white rounded-xl font-semibold text-sm hover:from-[#1d4ed8] hover:to-[#1e40af] disabled:opacity-50 shadow-lg shadow-blue-500/20">
                 {loading ? 'Entrando...' : 'Entrar'}
               </button>
             </form>
