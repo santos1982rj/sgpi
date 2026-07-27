@@ -22,6 +22,9 @@ export default async function DashboardPage() {
   const { count: gruposCount } = await supabase.from('grupos').select('*', { count: 'exact', head: true })
   const { count: avaliacoesCount } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true })
 
+  const { data: userData } = await supabase.from('profiles').select('nome, role').eq('id', user?.id).single()
+  const nome = userData?.nome || user?.email
+
   const { data: turmas } = await supabase.from('turmas').select('*').eq('ativa', true).limit(6).order('created_at', { ascending: false })
 
   const stats = [

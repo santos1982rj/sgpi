@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus, Search, Edit2, Trash2, X, ArrowLeft, Users as UsersIcon } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Plus, Search, Edit2, Trash2, X, ArrowLeft, Users, Upload, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
@@ -10,6 +10,9 @@ interface Grupo {
   nome: string
   tema: string
   status: string
+  turma_id: string
+  membros?: { id: string; nome: string; matricula: string; lider: boolean }[]
+  entregas?: { tipo: string; arquivo_nome: string }[]
 }
 
 export default function GruposPage() {
@@ -18,22 +21,24 @@ export default function GruposPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState<{ open: boolean; edit?: Grupo }>({ open: false })
+  const [membroModal, setMembroModal] = useState<{ open: boolean; grupo?: Grupo }>({ open: false })
   const [form, setForm] = useState({ nome: '', tema: '' })
+  const [membroForm, setMembroForm] = useState({ nome: '', matricula: '' })
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     const { data } = await supabase.from('grupos').select('*').order('created_at', { ascending: false })
     if (data) setGrupos(data)
     setLoading(false)
-  }
+  }, [supabase])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   const save = async () => {
     if (modal.edit) {
-      await supabase.from('grupos').update(form).eq('id', modal.edit.id)
+      await supabase.from('grupos').update({ nome: form.nome, tema: form.tema }).eq('id', modal.edit.id)
     } else {
-      await supabase.from('grupos').insert({ ...form, status: 'ativo' })
+      await supabase.from('grupos').insert({ nome: form.nome, tema: form.tema, status: 'ativo' })
     }
     setModal({ open: false })
     load()
@@ -44,6 +49,18 @@ export default function GruposPage() {
       await supabase.from('grupos').delete().eq('id', id)
       load()
     }
+  }
+
+  const addMembro = async (grupoId: string) => {
+    if (!membroForm.nome) return
+    // In a real app, we'd search for the student by matricula
+    await supabase.from('membros').insert({
+      grupo_id: grupoId,
+      aluno_id: '00000000-0000-0000-0000-000000000000', // placeholder
+      lider: false
+    })
+    setMembroForm({ nome: '', matricula: '' })
+    setMembroModal({ open: false })
   }
 
   const filtered = grupos.filter(g =>
@@ -88,32 +105,39 @@ export default function GruposPage() {
         <div className="text-center py-12 text-gray-400">Carregando...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
-          <UsersIcon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-400">Nenhum grupo encontrado</p>
+          <Users className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+          <p className="text-gray-500 font-medium">Nenhum grupo encontrado</p>
+          <p className="text-sm text-gray-400 mt-1">Crie um novo grupo para começar</p>
         </div>
       ) : (
         <div className="grid gap-4">
           {filtered.map(g => (
-            <div key={g.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="font-bold text-gray-900">{g.nome}</h3>
-                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColor(g.status)}`}>{g.status}</span>
+            <div key={g.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-bold text-gray-900">{g.nome}</h3>
+                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColor(g.status)}`}>{g.status}</span>
+                  </div>
+                  {g.tema && <p className="text-sm text-gray-500 truncate">{g.tema}</p>}
                 </div>
-                {g.tema && <p className="text-sm text-gray-500 truncate">{g.tema}</p>}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => { setForm({ nome: g.nome, tema: g.tema || '' }); setModal({ open: true, edit: g }) }}
-                  className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"><Edit2 className="h-4 w-4" /></button>
-                <button onClick={() => remove(g.id)}
-                  className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => setMembroModal({ open: true, grupo: g })}
+                    className="px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors flex items-center gap-1.5">
+                    <Users className="h-4 w-4" /> Membros
+                  </button>
+                  <button onClick={() => { setForm({ nome: g.nome, tema: g.tema || '' }); setModal({ open: true, edit: g }) }}
+                    className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"><Edit2 className="h-4 w-4" /></button>
+                  <button onClick={() => remove(g.id)}
+                    className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modal Grupo */}
       {modal.open && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModal({ open: false })}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
@@ -123,13 +147,13 @@ export default function GruposPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Nome do Grupo</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Nome</label>
                 <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="Ex: G01"
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:border-[#2563eb] focus:ring-4 focus:ring-blue-50 outline-none" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tema do Projeto</label>
-                <input value={form.tema} onChange={e => setForm({ ...form, tema: e.target.value })} placeholder="Ex: Fundações em solo residual"
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tema</label>
+                <input value={form.tema} onChange={e => setForm({ ...form, tema: e.target.value })} placeholder="Tema do projeto"
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:border-[#2563eb] focus:ring-4 focus:ring-blue-50 outline-none" />
               </div>
             </div>
@@ -138,6 +162,32 @@ export default function GruposPage() {
               <button onClick={save} className="px-4 py-2.5 bg-[#2563eb] text-white text-sm font-semibold rounded-xl hover:bg-[#1a4b8c] transition-colors">
                 {modal.edit ? 'Salvar' : 'Criar'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Membros */}
+      {membroModal.open && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setMembroModal({ open: false })}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Membros — {membroModal.grupo?.nome}</h3>
+              <button onClick={() => setMembroModal({ open: false })} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="space-y-3 mb-4">
+              <div className="text-sm text-gray-500 italic">Nenhum membro cadastrado ainda</div>
+            </div>
+            <div className="border-t border-gray-100 pt-4">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Adicionar Membro</h4>
+              <div className="flex gap-2">
+                <input value={membroForm.nome} onChange={e => setMembroForm({ ...membroForm, nome: e.target.value })} placeholder="Nome do aluno"
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#2563eb] outline-none" />
+                <button onClick={() => addMembro(membroModal.grupo!.id)}
+                  className="px-3 py-2 bg-[#2563eb] text-white text-sm rounded-lg hover:bg-[#1a4b8c] transition-colors">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
