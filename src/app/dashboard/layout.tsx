@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
   LayoutDashboard, Users, Users2, BookOpen, FileText,
-  ClipboardCheck, Settings, LogOut, Menu, X, ChevronDown, Bell
+  ClipboardCheck, Settings, LogOut, Menu, X, ChevronDown, Bell, Award
 } from 'lucide-react'
 
 const navigation = [
@@ -14,6 +14,7 @@ const navigation = [
   { name: 'Grupos', href: '/dashboard/grupos', icon: Users2 },
   { name: 'Projetos', href: '/dashboard/projetos', icon: BookOpen },
   { name: 'Avaliações', href: '/dashboard/avaliacoes', icon: ClipboardCheck },
+  { name: 'Notas', href: '/dashboard/notas', icon: Award },
   { name: 'Documentação', href: '/dashboard/documentacao', icon: FileText },
 ]
 
