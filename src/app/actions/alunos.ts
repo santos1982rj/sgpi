@@ -12,40 +12,19 @@ export async function criarAluno(formData: FormData) {
   const matricula = formData.get('matricula') as string
   const cpf = formData.get('cpf') as string
   const periodo = formData.get('periodo') as string
-  const turma_id = formData.get('turma_id') as string
+  const turmaId = formData.get('turma_id') as string || null
 
-  try {
-    // Create auth user via admin API
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: `${matricula}@aluno.unig.edu.br`,
-      password: 'unig2026',
-      email_confirm: true,
-      user_metadata: { nome, role: 'aluno' }
-    })
-    if (authError) return { error: authError.message }
-    if (!authData?.user) return { error: 'Erro ao criar usuário' }
+  const { data, error } = await supabase.rpc('criar_aluno', {
+    p_nome: nome,
+    p_matricula: matricula,
+    p_cpf: cpf,
+    p_periodo: periodo,
+    p_turma_id: turmaId
+  })
 
-    const uid = authData.user.id
-
-    // Create profile
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: uid, nome, email: `${matricula}@aluno.unig.edu.br`,
-      role: 'aluno', matricula, cpf, periodo
-    })
-    if (profileError) return { error: profileError.message }
-
-    // Link to turma
-    if (turma_id) {
-      await supabase.from('turma_alunos').insert({
-        turma_id, aluno_id: uid, matricula
-      })
-    }
-
-    revalidatePath('/dashboard/alunos')
-    return { success: true, matricula }
-  } catch (err: any) {
-    return { error: err.message || 'Erro interno' }
-  }
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/alunos')
+  return { success: true, matricula }
 }
 
 export async function atualizarAluno(formData: FormData) {
@@ -54,7 +33,6 @@ export async function atualizarAluno(formData: FormData) {
   const nome = formData.get('nome') as string
   const cpf = formData.get('cpf') as string
   const periodo = formData.get('periodo') as string
-
   const { error } = await supabase.from('profiles').update({ nome, cpf, periodo }).eq('id', id)
   if (error) return { error: error.message }
   revalidatePath('/dashboard/alunos')
@@ -64,11 +42,8 @@ export async function atualizarAluno(formData: FormData) {
 export async function excluirAluno(formData: FormData) {
   const supabase = await createClient()
   const id = formData.get('id') as string
-  
   await supabase.from('turma_alunos').delete().eq('aluno_id', id)
   await supabase.from('profiles').delete().eq('id', id)
-  // Note: auth.users deletion requires admin API - handles soft delete via profile removal
-  
   revalidatePath('/dashboard/alunos')
   return { success: true }
 }
