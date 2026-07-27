@@ -8,12 +8,6 @@ const statusColors = {
   'Encerrado': 'bg-slate-50 text-slate-500 border-slate-200',
 }
 
-const cursoColors: Record<string, string> = {
-  'EC': 'bg-blue-50 text-blue-700',
-  'EP': 'bg-emerald-50 text-emerald-700',
-  'CC': 'bg-purple-50 text-purple-700',
-}
-
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -25,7 +19,12 @@ export default async function DashboardPage() {
   const { data: userData } = await supabase.from('profiles').select('nome, role').eq('id', user?.id).single()
   const nome = userData?.nome || user?.email
 
-  const { data: turmas } = await supabase.from('turmas').select('*').eq('ativa', true).limit(6).order('created_at', { ascending: false })
+  const { data: turmas } = await supabase
+    .from('turmas')
+    .select('*, cursos(nome, sigla)')
+    .eq('ativa', true)
+    .limit(6)
+    .order('created_at', { ascending: false })
 
   const stats = [
     { label: 'Turmas Ativas', value: turmasCount || 0, icon: LayoutDashboard, color: 'from-[#4fc3f7] to-[#2563eb]', desc: 'este semestre' },
@@ -99,7 +98,7 @@ export default async function DashboardPage() {
                 ] as any[]).map((t, i) => (
                   <tr key={i} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4"><span className="font-semibold text-gray-900">{t.codigo}</span></td>
-                    <td className="px-6 py-4"><span className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-medium ${cursoColors[t.curso_id as string] || 'bg-gray-50 text-gray-600'}`}>{t.curso_id}</span></td>
+                    <td className="px-6 py-4"><span className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700`}>{t.cursos?.nome || '—'}</span></td>
                     <td className="px-6 py-4 text-gray-600">{t.periodo}</td>
                     <td className="px-6 py-4 text-gray-600">{t.grupos}</td>
                     <td className="px-6 py-4 text-gray-600 hidden md:table-cell">{t.professor || '-'}</td>
