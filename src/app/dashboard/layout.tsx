@@ -27,8 +27,8 @@ const roleNav: Record<string, { name: string; href: string; icon: any }[]> = {
   ],
   professor: [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Avaliar Grupos', href: '/dashboard/professor', icon: ClipboardCheck },
     { name: 'Minhas Turmas', href: '/dashboard/turmas', icon: Users },
-    { name: 'Avaliações', href: '/dashboard/avaliacoes', icon: ClipboardCheck },
   ],
   aluno: [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
