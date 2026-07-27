@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Users, Users2, BookOpen, FileText,
   ClipboardCheck, Settings, LogOut, Menu, X, Bell, Award,
-  UserPlus, Calendar, Shield
+  UserPlus, Calendar, Shield, HelpCircle
 } from 'lucide-react'
 
 const roleNav: Record<string, { name: string; href: string; icon: any }[]> = {
@@ -15,6 +15,7 @@ const roleNav: Record<string, { name: string; href: string; icon: any }[]> = {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Turmas', href: '/dashboard/turmas', icon: Users },
     { name: 'Grupos', href: '/dashboard/grupos', icon: Users2 },
+    { name: 'Solicitações', href: '/dashboard/solicitacoes', icon: HelpCircle },
     { name: 'Avaliações', href: '/dashboard/avaliacoes', icon: ClipboardCheck },
     { name: 'Alunos', href: '/dashboard/alunos', icon: UserPlus },
     { name: 'Notas', href: '/dashboard/notas', icon: Award },
@@ -24,9 +25,9 @@ const roleNav: Record<string, { name: string; href: string; icon: any }[]> = {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Calendário', href: '/dashboard/calendario', icon: Calendar },
     { name: 'Turmas', href: '/dashboard/turmas', icon: Users },
+    { name: 'Solicitações', href: '/dashboard/solicitacoes', icon: HelpCircle },
     { name: 'Avaliações', href: '/dashboard/avaliacoes', icon: ClipboardCheck },
     { name: 'Notas', href: '/dashboard/notas', icon: Award },
-    { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
   ],
   secretaria: [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -37,8 +38,8 @@ const roleNav: Record<string, { name: string; href: string; icon: any }[]> = {
   ],
   professor: [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Meus Grupos', href: '/dashboard/grupos', icon: Users2 },
-    { name: 'Avaliações', href: '/dashboard/avaliacoes', icon: ClipboardCheck },
+    { name: 'Avaliar', href: '/dashboard/avaliacoes', icon: ClipboardCheck },
+    { name: 'Grupos', href: '/dashboard/grupos', icon: Users2 },
   ],
   banca: [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -47,7 +48,7 @@ const roleNav: Record<string, { name: string; href: string; icon: any }[]> = {
   ],
   aluno: [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Meu Grupo', href: '/dashboard/grupos', icon: Users2 },
+    { name: 'Meu Grupo', href: '/dashboard/meu-grupo', icon: Users2 },
     { name: 'Documentos', href: '/dashboard/projetos', icon: BookOpen },
     { name: 'Minhas Notas', href: '/dashboard/notas', icon: Award },
   ],
@@ -57,7 +58,7 @@ const roleLabels: Record<string, string> = {
   admin_super: 'Administrador',
   coordenacao: 'Coordenação',
   secretaria: 'Secretaria',
-  professor: 'Professor da Disciplina',
+  professor: 'Professor',
   banca: 'Avaliador',
   aluno: 'Aluno',
 }
