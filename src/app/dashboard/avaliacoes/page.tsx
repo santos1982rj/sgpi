@@ -29,19 +29,14 @@ export default function AvaliacoesPage() {
     }
     const ids = membros.map((m: any) => m.aluno_id)
     const { data: profiles } = await supabase.from('profiles').select('id, nome, matricula').in('id', ids)
-    
-    // Get existing notas
     const { data: avaliacoes } = await supabase.from('avaliacoes').select('*').eq('grupo_id', grupoId)
-    
     const notasMap: Record<string, { p1: string; p2: string; feedback: string }> = {}
     for (const a of (avaliacoes || [])) {
-      const key = `${a.aluno_id || a.id}`
       if (!notasMap[a.aluno_id]) notasMap[a.aluno_id] = { p1: '', p2: '', feedback: '' }
       if (a.etapa === 'P1') notasMap[a.aluno_id].p1 = a.nota?.toString() || ''
       if (a.etapa === 'P2') notasMap[a.aluno_id].p2 = a.nota?.toString() || ''
       if (a.feedback) notasMap[a.aluno_id].feedback = a.feedback
     }
-    
     setAlunos(profiles || [])
     setNotas(notasMap)
   }
@@ -53,35 +48,24 @@ export default function AvaliacoesPage() {
     }))
   }
 
-  const saveNotas = async () => {
+  const salvarNotas = async () => {
     setSaving(true)
-    const promises: Promise<any>[] = []
-    
     for (const aluno of alunos) {
       const n = notas[aluno.id]
       if (!n) continue
-      
       if (n.p1) {
-        promises.push(supabase.from('avaliacoes').upsert({
-          grupo_id: selectedGrupo,
-          aluno_id: aluno.id,
-          etapa: 'P1',
-          nota: parseFloat(n.p1),
-          feedback: n.feedback || null,
-        }, { onConflict: 'grupo_id,aluno_id,etapa' }).select('*').then())
+        await supabase.from('avaliacoes').upsert({
+          grupo_id: selectedGrupo, aluno_id: aluno.id, etapa: 'P1',
+          nota: parseFloat(n.p1), feedback: n.feedback || null,
+        }, { onConflict: 'grupo_id,aluno_id,etapa' })
       }
       if (n.p2) {
-        promises.push(supabase.from('avaliacoes').upsert({
-          grupo_id: selectedGrupo,
-          aluno_id: aluno.id,
-          etapa: 'P2',
-          nota: parseFloat(n.p2),
-          feedback: n.feedback || null,
-        }, { onConflict: 'grupo_id,aluno_id,etapa' }).select('*').then())
+        await supabase.from('avaliacoes').upsert({
+          grupo_id: selectedGrupo, aluno_id: aluno.id, etapa: 'P2',
+          nota: parseFloat(n.p2), feedback: n.feedback || null,
+        }, { onConflict: 'grupo_id,aluno_id,etapa' })
       }
     }
-    
-    await Promise.all(promises)
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
@@ -92,11 +76,9 @@ export default function AvaliacoesPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 mb-6"><ArrowLeft className="h-4 w-4" /> Voltar</Link>
-
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Avaliações</h1>
-      <p className="text-sm text-gray-500 mb-6">Lançamento de notas por aluno — P1 (Documentação) e P2 (Apresentação)</p>
+      <p className="text-sm text-gray-500 mb-6">Notas individuais por aluno — P1 (Documentação) e P2 (Apresentação)</p>
 
-      {/* Select Grupo */}
       <div className="mb-6">
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Grupo</label>
         <select value={selectedGrupo} onChange={e => loadAlunos(e.target.value)}
@@ -109,7 +91,7 @@ export default function AvaliacoesPage() {
       </div>
 
       {!selectedGrupo ? (
-        <div className="text-center py-16 text-gray-400">Selecione um grupo para começar</div>
+        <div className="text-center py-16 text-gray-400">Selecione um grupo</div>
       ) : alunos.length === 0 ? (
         <div className="text-center py-16 text-gray-400">Este grupo não tem membros</div>
       ) : (
@@ -149,24 +131,20 @@ export default function AvaliacoesPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-500 mb-1">Média (P1×0.4 + P2×0.6)</label>
-                        <div className="h-[38px] flex items-center px-3 bg-gray-50 rounded-lg text-sm font-bold text-gray-900">
-                          {media || '—'}
-                        </div>
+                        <div className="h-[38px] flex items-center px-3 bg-gray-50 rounded-lg text-sm font-bold text-gray-900">{media || '—'}</div>
                       </div>
                     </div>
                     <div>
                       <input value={n.feedback} onChange={e => updateNota(aluno.id, 'feedback', e.target.value)}
-                        placeholder="Feedback (opcional)"
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#2563eb] outline-none" />
+                        placeholder="Feedback (opcional)" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-[#2563eb] outline-none" />
                     </div>
                   </div>
                 )
               })}
             </div>
           </div>
-
           <div className="flex justify-end">
-            <button onClick={saveNotas} disabled={saving}
+            <button onClick={salvarNotas} disabled={saving}
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#2563eb] text-white rounded-xl text-sm font-semibold hover:bg-[#1a4b8c] disabled:opacity-50 transition-all shadow-sm">
               {saving ? 'Salvando...' : saved ? <><CheckCircle className="h-4 w-4" /> Notas Salvas!</> : <><Send className="h-4 w-4" /> Salvar Notas</>}
             </button>
